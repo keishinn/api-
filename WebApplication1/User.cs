@@ -15,6 +15,9 @@ namespace WebApplication1
         [Column("login")]
         public string Login { get; set; }
 
+        [Column("age")]
+        public string Age { get; set; }
+
     }
 }
 
