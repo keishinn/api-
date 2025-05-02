@@ -24,7 +24,7 @@ namespace WebApplication1
             }
         }
 
-        public async Task<bool> UpdateUser(Supabase.Client _supabaseClient, int id, string newLogin, string newPassword, string newAge)
+        public async Task<bool> UpdateUser(Supabase.Client _supabaseClient, int id, string newLogin, string newPassword, int newAge)
         {
             try
             {
@@ -70,6 +70,7 @@ namespace WebApplication1
                 return false;
             }
         }
+
         public async Task<List<City>> GetCities(Supabase.Client _supabaseClient)
         {
             var result = await _supabaseClient.From<City>().Get();
@@ -112,6 +113,7 @@ namespace WebApplication1
                 return false;
             }
         }
+        
         public async Task<bool> DeleteCity(Supabase.Client _supabaseClient, long id)
         {
             try

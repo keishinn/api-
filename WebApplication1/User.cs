@@ -16,8 +16,7 @@ namespace WebApplication1
         public string Login { get; set; }
 
         [Column("age")]
-        public string Age { get; set; }
-
+        public int? Age { get; set; }
     }
 }
 

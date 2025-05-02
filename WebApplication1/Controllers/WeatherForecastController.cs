@@ -17,17 +17,16 @@ namespace WebApplication1.Controllers
         }
 
         [HttpGet("GetAllUsers", Name = "GetAllUsers")]
-        public async Task<string> GetAllUsers() 
+        public async Task<IActionResult> GetAllUsers() 
         {
             try
             {
-                var result = await _supabaseClient.From<User>().Get();
-                return JsonConvert.SerializeObject(result.Models, Formatting.Indented); 
+                var result = await _supabaseContext.GetUsers(_supabaseClient);
+                return Ok(JsonConvert.SerializeObject(result, Formatting.Indented)); 
             }
             catch (Exception ex)
             {
-
-                return "";
+                return StatusCode(500, $"Ошибка сервера: {ex.Message}");
             }
         }
 
@@ -46,7 +45,8 @@ namespace WebApplication1.Controllers
                     {
                         Id = 0,
                         Login = userData.Login,
-                        Password = userData.Password
+                        Password = userData.Password,
+                        Age = userData.Age
                     };
 
                     bool result = await _supabaseContext.InsertUser(_supabaseClient, newUser);
@@ -61,7 +61,7 @@ namespace WebApplication1.Controllers
                     }
                 } 
             }
-            catch (Exception ex)
+            catch (Exception )
             {
                 return BadRequest( "Неизвестная ошибка.");
             }
@@ -73,11 +73,11 @@ namespace WebApplication1.Controllers
             try
             {
                 if (userData.Id <= 0 ||
-                    string.IsNullOrEmpty(userData.Name) ||
+                    userData.Age <= 0 ||
                     string.IsNullOrEmpty(userData.Login) ||
                     string.IsNullOrEmpty(userData.Password))
                 {
-                    return BadRequest("Invalid data for update");
+                    return BadRequest("Недопустимые данные для обновления");
                 }
 
                 var existingUser = await _supabaseClient.From<User>()
@@ -86,7 +86,7 @@ namespace WebApplication1.Controllers
 
                 if (existingUser == null)
                 {
-                    return NotFound("User not found");
+                    return NotFound("Пользователь не найден");
                 }
 
                 existingUser.Login = userData.Login;
@@ -95,11 +95,11 @@ namespace WebApplication1.Controllers
 
                 await existingUser.Update<User>();
 
-                return Ok("User data updated successfully");
+                return Ok("Пользовательские данные успешно обновлены");
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                return StatusCode(500, $"Ошибка сервера: {ex.Message}");
             }
         }
 
@@ -110,7 +110,7 @@ namespace WebApplication1.Controllers
             {
                 if (id <= 0)
                 {
-                    return BadRequest("Invalid user ID");
+                    return BadRequest("Неверный ID пользователя");
                 }
 
                 var userToDelete = await _supabaseClient.From<User>()
@@ -119,15 +119,15 @@ namespace WebApplication1.Controllers
 
                 if (userToDelete == null)
                 {
-                    return NotFound("User not found");
+                    return NotFound("Пользователь не найден");
                 }
 
                 await userToDelete.Delete<User>();
-                return Ok("User deleted successfully");
+                return Ok("Пользователь успешно удален");
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                return StatusCode(500, $"Ошибка сервера: {ex.Message}");
             }
         }
 
@@ -144,6 +144,7 @@ namespace WebApplication1.Controllers
                 return StatusCode(500, $"Ошибка сервера: {ex.Message}");
             }
         }
+
         [HttpPost("InsertCity", Name = "InsertCity")]
         public async Task<ActionResult> InsertCity([FromBody] CityData cityData)
         {
@@ -199,6 +200,7 @@ namespace WebApplication1.Controllers
                 return StatusCode(500, $"Ошибка сервера: {ex.Message}");
             }
         }
+
         [HttpDelete("DeleteCity", Name = "DeleteCity")]
         public async Task<ActionResult> DeleteCity(long id)
         {
@@ -224,11 +226,9 @@ namespace WebApplication1.Controllers
             }
         }
     }
+
     public class UserData
     {
-        [JsonProperty("name")]
-        public string Name { get; set; }
-
         [JsonProperty("login")]
         public string Login { get; set; }
 
@@ -236,7 +236,7 @@ namespace WebApplication1.Controllers
         public string Password { get; set; }
 
         [JsonProperty("age")]
-        public string Age { get; set; }
+        public int? Age { get; set; }
     }
 
     public class UserUpdateData
@@ -244,9 +244,6 @@ namespace WebApplication1.Controllers
         [JsonProperty("id")]
         public int Id { get; set; }
 
-        [JsonProperty("name")]
-        public string Name { get; set; }
-
         [JsonProperty("login")]
         public string Login { get; set; }
 
@@ -254,8 +251,9 @@ namespace WebApplication1.Controllers
         public string Password { get; set; }
 
         [JsonProperty("age")]
-        public string Age { get; set; }
+        public int? Age { get; set; }
     }
+
     public class CityData
     {
         [JsonProperty("name")]
